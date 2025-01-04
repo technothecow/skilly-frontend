@@ -13,7 +13,7 @@ import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { KeyRound, Sparkles, Brain, Users } from 'lucide-react'
 
-export default function SkillyOnePager() {
+export default function SkillyLanding() {
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'signUp' | 'signIn'>('signUp')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -74,6 +74,7 @@ export default function SkillyOnePager() {
       }
     } catch (error) {
       toast.error(`An error occurred while ${authMode === 'signUp' ? 'signing up' : 'signing in'}. Please try again.`)
+      console.error('Error signing up/in:', error)
     }
   }
 

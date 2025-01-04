@@ -13,7 +13,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import confetti from 'canvas-confetti'
 import { ChevronRight, ChevronLeft, Camera, Loader2 } from 'lucide-react'
 import Cropper from 'react-easy-crop'
-import { Area } from 'react-easy-crop/types'
+import { Area } from 'react-easy-crop'
 
 interface Category {
   categories: string[];
@@ -37,12 +37,7 @@ export default function FillProfile() {
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
   const [isCheckingUsername, setIsCheckingUsername] = useState(false)
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false)
-  const [isProfileSubmitted, setIsProfileSubmitted] = useState(false)
   const router = useRouter()
-
-  useEffect(() => {
-    checkProfileStatus()
-  }, [])
 
   const checkProfileStatus = async () => {
     try {
@@ -67,9 +62,8 @@ export default function FillProfile() {
       toast.error((error as Error).message || 'Failed to check profile status. Please try again later.')
     }
   }
-
   useEffect(() => {
-    fetchCategories()
+    checkProfileStatus()
   }, [])
 
   useEffect(() => {
@@ -80,7 +74,7 @@ export default function FillProfile() {
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [username])
+  }, [])
 
   const fetchCategories = async () => {
     try {
@@ -103,6 +97,10 @@ export default function FillProfile() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchCategories()
+  }, [])
 
   const checkUsername = async () => {
     setIsCheckingUsername(true)
@@ -143,7 +141,7 @@ export default function FillProfile() {
     }
   }
 
-  const handleCropComplete = async (croppedArea: Area, croppedAreaPixels: Area) => {
+  const handleCropComplete = async (croppedAreaPixels: Area) => {
     try {
       const croppedImage = await getCroppedImg(image!, croppedAreaPixels)
       setCroppedImage(croppedImage)
@@ -227,7 +225,6 @@ export default function FillProfile() {
       })
 
       if (response.ok) {
-        setIsProfileSubmitted(true)
         toast.success('Profile information submitted successfully!')
         setCurrentPanel(3) // Move to the image upload panel
       } else {
@@ -551,7 +548,7 @@ export default function FillProfile() {
           </DialogHeader>
           <div className="h-[300px] relative">
             <Cropper
-              image={image}
+              image={image || undefined}
               crop={crop}
               zoom={zoom}
               aspect={1}
@@ -563,7 +560,7 @@ export default function FillProfile() {
             />
           </div>
           <Button
-            onClick={() => handleCropComplete(crop, croppedAreaPixels!)}
+            onClick={() => handleCropComplete(croppedAreaPixels!)}
             className="bg-cyan-600 hover:bg-cyan-700 text-white"
           >
             Apply
