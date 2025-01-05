@@ -259,21 +259,27 @@ END:VCALENDAR`
                 {homeData.recommended.map((user) => (
                   <motion.div key={user.username} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                     <Card className="cursor-pointer bg-gray-700 hover:bg-gray-600 transition-colors duration-200 border-cyan-600" onClick={() => handleUserClick(user.username)}>
-                      <CardContent className="flex items-center p-4">
-                        <Avatar className="h-12 w-12 mr-4">
-                          <AvatarImage src={`data:image/jpeg;base64,${user.photo}`} />
-                          <AvatarFallback>{user.display_name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
+                      <CardContent className="flex flex-col p-4">
+                        <div className="flex items-center mb-3">
+                          <Avatar className="h-12 w-12 mr-4">
+                            <AvatarImage src={`data:image/jpeg;base64,${user.photo}`} />
+                            <AvatarFallback>{user.display_name.charAt(0)}</AvatarFallback>
+                          </Avatar>
                           <h3 className="font-semibold text-cyan-300">{user.display_name}</h3>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {user.teach_categories.map((skill) => (
-                              <Badge key={`teach-${skill}`} variant="secondary" className="bg-cyan-600 text-white">{skill}</Badge>
-                            ))}
-                            {user.learn_categories.map((skill) => (
-                              <Badge key={`learn-${skill}`} variant="outline" className="text-cyan-300 border-cyan-300">{skill}</Badge>
-                            ))}
-                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {user.teach_categories.length > 0 && (
+                            <div>
+                              <span className="text-sm font-medium text-cyan-400">Teaching: </span>
+                              <span className="text-sm text-gray-300">{user.teach_categories.join(', ')}</span>
+                            </div>
+                          )}
+                          {user.learn_categories.length > 0 && (
+                            <div>
+                              <span className="text-sm font-medium text-cyan-400">Learning: </span>
+                              <span className="text-sm text-gray-300">{user.learn_categories.join(', ')}</span>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
