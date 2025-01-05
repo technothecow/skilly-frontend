@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
@@ -39,41 +39,7 @@ export default function SearchPage() {
   const teachSelectRef = useRef<HTMLButtonElement>(null)
   const learnSelectRef = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/categories/list`, {
-          credentials: 'include',
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setCategories(data.categories)
-        } else {
-          throw new Error('Failed to fetch categories')
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error)
-        toast.error('Failed to load categories. Please try again later.')
-      }
-    }
-
-    fetchCategories()
-  }, [])
-
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams)
-    if (username) params.set('username', username)
-    else params.delete('username')
-    if (selectedTeachCategories.length) params.set('teach', selectedTeachCategories.join(','))
-    else params.delete('teach')
-    if (selectedLearnCategories.length) params.set('learn', selectedLearnCategories.join(','))
-    else params.delete('learn')
-    if (showKnownPeople) params.set('known', 'true')
-    else params.delete('known')
-    router.replace(`/search?${params.toString()}`)
-  }, [username, selectedTeachCategories, selectedLearnCategories, showKnownPeople, router, searchParams])
-
-  const handleSearch = async (resetResults: boolean = true) => {
+  const handleSearch = useCallback(async (resetResults: boolean = true) => {
     if (!username.trim() && selectedTeachCategories.length === 0 && selectedLearnCategories.length === 0) {
       toast.error('Please enter a username or select at least one category')
       return
@@ -116,7 +82,47 @@ export default function SearchPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [username, selectedTeachCategories, selectedLearnCategories, showKnownPeople, page, router])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/categories/list`, {
+          credentials: 'include',
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data.categories)
+        } else {
+          throw new Error('Failed to fetch categories')
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+        toast.error('Failed to load categories. Please try again later.')
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams)
+    if (username) params.set('username', username)
+    else params.delete('username')
+    if (selectedTeachCategories.length) params.set('teach', selectedTeachCategories.join(','))
+    else params.delete('teach')
+    if (selectedLearnCategories.length) params.set('learn', selectedLearnCategories.join(','))
+    else params.delete('learn')
+    if (showKnownPeople) params.set('known', 'true')
+    else params.delete('known')
+    router.replace(`/search?${params.toString()}`)
+  }, [username, selectedTeachCategories, selectedLearnCategories, showKnownPeople, router, searchParams])
+
+  useEffect(() => {
+    if (username || selectedTeachCategories.length > 0 || selectedLearnCategories.length > 0 || showKnownPeople) {
+      handleSearch(true)
+    }
+  }, []) // This effect runs only once when the component mounts
 
   const handleLoadMore = () => {
     handleSearch(false)
