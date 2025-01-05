@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,6 +12,7 @@ import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface SearchResult {
   username: string
@@ -22,15 +23,19 @@ interface SearchResult {
 }
 
 export default function SearchPage() {
-  const [username, setUsername] = useState('')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  const [username, setUsername] = useState(searchParams.get('username') || '')
   const [results, setResults] = useState<SearchResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [categories, setCategories] = useState<string[]>([])
-  const [selectedTeachCategories, setSelectedTeachCategories] = useState<string[]>([])
-  const [selectedLearnCategories, setSelectedLearnCategories] = useState<string[]>([])
+  const [selectedTeachCategories, setSelectedTeachCategories] = useState<string[]>(searchParams.get('teach')?.split(',').filter(Boolean) || [])
+  const [selectedLearnCategories, setSelectedLearnCategories] = useState<string[]>(searchParams.get('learn')?.split(',').filter(Boolean) || [])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-  const router = useRouter()
+  const [showKnownPeople, setShowKnownPeople] = useState(searchParams.get('known') === 'true')
+  
   const teachSelectRef = useRef<HTMLButtonElement>(null)
   const learnSelectRef = useRef<HTMLButtonElement>(null)
 
@@ -55,6 +60,19 @@ export default function SearchPage() {
     fetchCategories()
   }, [])
 
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams)
+    if (username) params.set('username', username)
+    else params.delete('username')
+    if (selectedTeachCategories.length) params.set('teach', selectedTeachCategories.join(','))
+    else params.delete('teach')
+    if (selectedLearnCategories.length) params.set('learn', selectedLearnCategories.join(','))
+    else params.delete('learn')
+    if (showKnownPeople) params.set('known', 'true')
+    else params.delete('known')
+    router.replace(`/search?${params.toString()}`)
+  }, [username, selectedTeachCategories, selectedLearnCategories, showKnownPeople, router, searchParams])
+
   const handleSearch = async (resetResults: boolean = true) => {
     if (!username.trim() && selectedTeachCategories.length === 0 && selectedLearnCategories.length === 0) {
       toast.error('Please enter a username or select at least one category')
@@ -72,6 +90,7 @@ export default function SearchPage() {
           username: username.trim(),
           teach_categories: selectedTeachCategories,
           learn_categories: selectedLearnCategories,
+          show_known_people: showKnownPeople,
           page: resetResults ? 1 : page,
         }),
         credentials: 'include',
@@ -133,6 +152,16 @@ export default function SearchPage() {
     }
   }
 
+  const handleReset = () => {
+    setUsername('')
+    setSelectedTeachCategories([])
+    setSelectedLearnCategories([])
+    setShowKnownPeople(false)
+    setResults([])
+    setPage(1)
+    setHasMore(true)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white pb-20">
       <motion.header 
@@ -192,6 +221,24 @@ export default function SearchPage() {
                 </Badge>
               ))}
             </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="showKnown"
+                checked={showKnownPeople}
+                onCheckedChange={(checked) => setShowKnownPeople(checked as boolean)}
+              />
+              <label htmlFor="showKnown" className="text-sm text-gray-300">
+                Show known people
+              </label>
+            </div>
+            <Button
+              onClick={handleReset}
+              className="bg-gray-700 hover:bg-gray-600 text-white"
+            >
+              Reset
+            </Button>
           </div>
           <Button 
             onClick={() => handleSearch(true)} 
